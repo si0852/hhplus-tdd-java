@@ -14,4 +14,12 @@ public record UserPoint(
         long newPoint = this.point + amount;
         return new UserPoint(this.id, newPoint, System.currentTimeMillis());
     }
+
+    public UserPoint usePoint(long amount) {
+        long usePoint = this.point - amount;
+        if (usePoint < 0) {
+            throw new IllegalArgumentException("사용되는 포인트를 확인해주세요");
+        }
+        return new UserPoint(this.id, usePoint, System.currentTimeMillis());
+    }
 }

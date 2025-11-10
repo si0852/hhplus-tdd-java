@@ -17,4 +17,8 @@ public class UserPointRepository {
     public UserPoint savePoint(UserPoint userPoint) {
        return userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
     }
+
+    public UserPoint updatePoint(UserPoint userPoint) {
+       return userPointTable.insertOrUpdate(userPoint.id(), userPoint.point());
+    }
 }

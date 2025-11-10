@@ -12,7 +12,7 @@ public class PointHistoryRepository {
 
     private final PointHistoryTable pointHistoryTable;
 
-    public PointHistory insertHistory(long userId, long amount, TransactionType type, long updateMillis) {
-        return pointHistoryTable.insert(userId, amount, type, updateMillis);
+    public PointHistory insertHistory(PointHistory pointHistory) {
+        return pointHistoryTable.insert(pointHistory.userId(), pointHistory.amount(), pointHistory.type(), pointHistory.updateMillis());
     }
 }

@@ -1,6 +1,8 @@
 package io.hhplus.tdd.service;
 
 import io.hhplus.tdd.dto.PointCharge;
+import io.hhplus.tdd.dto.PointUse;
+import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.repository.PointHistoryRepository;
 import io.hhplus.tdd.repository.UserPointRepository;
@@ -30,10 +32,11 @@ public class PointServiceTest {
     @DisplayName("유저가 존재하지 않으면 예외 발생")
     void getPoint_userNotFound() {
         //given
-        when(userPointRepository.selectUser(999L)).thenReturn(null);
+        PointCharge charge = PointCharge.builder().id(999L).amount(100L).build();
+        when(userPointRepository.selectUser(charge.getId())).thenReturn(null);
 
         //when & then
-        assertThrows(IllegalArgumentException.class, () -> pointService.userCheckValue(999L));
+        assertThrows(IllegalArgumentException.class, () -> pointService.chargePoint(charge));
     }
 
     @Test
@@ -63,7 +66,40 @@ public class PointServiceTest {
 
         //then
         assertEquals(1500L, chargingPoint.point());
+    }
 
+    @Test
+    @DisplayName("포인트 사용시 기존 포인트보다 많은 포인트를 사용하면 에러발생")
+    void usePoint_minus_point_error() {
+        //given
+        PointUse request = PointUse.builder().id(1L).amount(1000L).build();
+
+        UserPoint existsUser = new UserPoint(request.getId(), 500L, System.currentTimeMillis());
+
+        when(userPointRepository.selectUser(1L)).thenReturn(existsUser);
+
+        // when & then
+        assertThrows(IllegalArgumentException.class, () -> pointService.usePoint(request));
+    }
+
+    @Test
+    @DisplayName("포인트 사용 성공")
+    void usePoint_success() {
+        //given
+        PointUse request = PointUse.builder().id(1L).amount(1000L).build();
+
+        UserPoint existsUser = new UserPoint(request.getId(), 5000L, System.currentTimeMillis());
+        UserPoint usedUser = new UserPoint(request.getId(), 4000L, System.currentTimeMillis());
+
+        when(userPointRepository.selectUser(1L)).thenReturn(existsUser);
+        when(userPointRepository.updatePoint(any(UserPoint.class))).thenReturn(usedUser);
+
+        // when
+        UserPoint chargingPoint = pointService.usePoint(request);
+
+        // then
+        assertEquals(4000L, chargingPoint.point());
+        verify(pointHistoryRepository).insertHistory(any(PointHistory.class));
     }
 
 }
