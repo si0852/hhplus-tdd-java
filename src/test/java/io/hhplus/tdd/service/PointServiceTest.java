@@ -2,13 +2,11 @@ package io.hhplus.tdd.service;
 
 import io.hhplus.tdd.dto.request.PointCharge;
 import io.hhplus.tdd.dto.request.PointUse;
-import io.hhplus.tdd.dto.response.PointHistoryDto;
 import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.repository.PointHistoryRepository;
 import io.hhplus.tdd.repository.UserPointRepository;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -119,6 +117,21 @@ public class PointServiceTest {
         assertThrows(IllegalArgumentException.class, () -> pointService.selectHistory(userId));
     }
 
+    @Test
+    @DisplayName("포인트 충전/사용내역 조회 - 조회 내역이 없을 경우")
+    void pointHistory_select_0() {
+        // given
+        long userId = 33L;
+        UserPoint existsUser = new UserPoint(userId, 5000L, System.currentTimeMillis());
+
+        when(userPointRepository.selectUser(userId)).thenReturn(existsUser);
+        List<PointHistory> histories = List.of();
+        when(pointHistoryRepository.selectHistory(userId)).thenReturn(histories);
+
+        // then & when
+        assertThrows(IllegalArgumentException.class, () -> pointService.selectHistory(userId));
+    }
+
 
     @Test
     @DisplayName("포인트 충전/사용내역 조회")
@@ -137,12 +150,12 @@ public class PointServiceTest {
 
 
         // when
-        List<PointHistoryDto> userHistories = pointService.selectHistory(userId);
+        List<PointHistory> userHistories = pointService.selectHistory(userId);
 
         // then
         assertEquals(3, userHistories.size());
-        assertEquals(1000l, userHistories.get(0).getAmount());
-        assertEquals(TransactionType.CHARGE, userHistories.get(1).getType());
+        assertEquals(1000l, userHistories.get(0).amount());
+        assertEquals(TransactionType.CHARGE, userHistories.get(1).type());
     }
 
 }
