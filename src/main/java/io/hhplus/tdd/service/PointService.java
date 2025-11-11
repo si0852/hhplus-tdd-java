@@ -3,7 +3,6 @@ package io.hhplus.tdd.service;
 
 import io.hhplus.tdd.dto.request.PointCharge;
 import io.hhplus.tdd.dto.request.PointUse;
-import io.hhplus.tdd.dto.response.PointHistoryDto;
 import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -51,18 +49,19 @@ public class PointService {
         return userPoint;
     }
 
-    public List<PointHistoryDto> selectHistory(long userId) {
+    public List<PointHistory> selectHistory(long userId) {
         UserPoint userPoint = userCheckValue(userId);
         List<PointHistory> histories = pointHistoryRepository.selectHistory(userPoint.id());
 
-        List<PointHistoryDto> userHistories = histories.stream()
-                .map(history -> PointHistoryDto.builder()
-                        .userId(history.userId())
-                        .type(history.type())
-                        .amount(history.amount())
-                        .build()).toList();
+        if (histories.size() < 1) {
+            throw new IllegalArgumentException("조회 내역이 없습니다.");
+        }
 
-        return userHistories;
+        return histories;
+    }
+
+    public UserPoint selectUserPoint(long userId) {
+        return userCheckValue(userId);
     }
 
     private UserPoint userCheckValue(long useId) {
