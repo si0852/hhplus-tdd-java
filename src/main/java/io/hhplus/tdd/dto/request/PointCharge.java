@@ -1,4 +1,4 @@
-package io.hhplus.tdd.dto;
+package io.hhplus.tdd.dto.request;
 
 import lombok.Builder;
 import lombok.Getter;
