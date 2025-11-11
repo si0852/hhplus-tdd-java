@@ -1,8 +1,9 @@
 package io.hhplus.tdd.service;
 
 
-import io.hhplus.tdd.dto.PointCharge;
-import io.hhplus.tdd.dto.PointUse;
+import io.hhplus.tdd.dto.request.PointCharge;
+import io.hhplus.tdd.dto.request.PointUse;
+import io.hhplus.tdd.dto.response.PointHistoryDto;
 import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
@@ -11,7 +12,9 @@ import io.hhplus.tdd.repository.UserPointRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +49,20 @@ public class PointService {
         pointHistoryRepository.insertHistory(new PointHistory(0, userPoint.id(), point.getAmount(), TransactionType.USE, System.currentTimeMillis()));
 
         return userPoint;
+    }
+
+    public List<PointHistoryDto> selectHistory(long userId) {
+        UserPoint userPoint = userCheckValue(userId);
+        List<PointHistory> histories = pointHistoryRepository.selectHistory(userPoint.id());
+
+        List<PointHistoryDto> userHistories = histories.stream()
+                .map(history -> PointHistoryDto.builder()
+                        .userId(history.userId())
+                        .type(history.type())
+                        .amount(history.amount())
+                        .build()).toList();
+
+        return userHistories;
     }
 
     private UserPoint userCheckValue(long useId) {

@@ -1,17 +1,22 @@
 package io.hhplus.tdd.service;
 
-import io.hhplus.tdd.dto.PointCharge;
-import io.hhplus.tdd.dto.PointUse;
+import io.hhplus.tdd.dto.request.PointCharge;
+import io.hhplus.tdd.dto.request.PointUse;
+import io.hhplus.tdd.dto.response.PointHistoryDto;
 import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.repository.PointHistoryRepository;
 import io.hhplus.tdd.repository.UserPointRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -100,6 +105,44 @@ public class PointServiceTest {
         // then
         assertEquals(4000L, chargingPoint.point());
         verify(pointHistoryRepository).insertHistory(any(PointHistory.class));
+    }
+
+    @Test
+    @DisplayName("포인트 충전/사용내역 조회 - 유저가 없는 경우 에러 발생")
+    void pointHistory_select_fail() {
+        // given
+        long userId = 33L;
+
+        when(userPointRepository.selectUser(userId)).thenReturn(null);
+
+        // then & when
+        assertThrows(IllegalArgumentException.class, () -> pointService.selectHistory(userId));
+    }
+
+
+    @Test
+    @DisplayName("포인트 충전/사용내역 조회")
+    void pointHistory_select_success() {
+        // given
+        long userId = 33L;
+        UserPoint existsUser = new UserPoint(userId, 5000L, System.currentTimeMillis());
+        List<PointHistory> histories = List.of(
+                new PointHistory(1l, userId, 1000l, TransactionType.CHARGE, System.currentTimeMillis()),
+                new PointHistory(1l, userId, 2000l, TransactionType.CHARGE, System.currentTimeMillis()),
+                new PointHistory(1l, userId, 500l, TransactionType.USE, System.currentTimeMillis())
+        );
+
+        when(userPointRepository.selectUser(userId)).thenReturn(existsUser);
+        when(pointHistoryRepository.selectHistory(userId)).thenReturn(histories);
+
+
+        // when
+        List<PointHistoryDto> userHistories = pointService.selectHistory(userId);
+
+        // then
+        assertEquals(3, userHistories.size());
+        assertEquals(1000l, userHistories.get(0).getAmount());
+        assertEquals(TransactionType.CHARGE, userHistories.get(1).getType());
     }
 
 }

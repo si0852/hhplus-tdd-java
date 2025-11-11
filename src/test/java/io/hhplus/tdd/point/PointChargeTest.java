@@ -1,6 +1,6 @@
 package io.hhplus.tdd.point;
 
-import io.hhplus.tdd.dto.PointCharge;
+import io.hhplus.tdd.dto.request.PointCharge;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
