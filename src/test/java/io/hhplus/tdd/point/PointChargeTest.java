@@ -1,6 +1,7 @@
 package io.hhplus.tdd.point;
 
 import io.hhplus.tdd.dto.request.PointCharge;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,5 +39,15 @@ public class PointChargeTest {
         assertEquals(newUserPoint.point(), 6000L);
     }
 
+    @Test
+    @DisplayName("충전금액이 1_000_000이 넘을 경우")
+    void 포인트충전_충전금액이_MAX_값보다_클떄() {
+        // given
+        userPoint = new UserPoint(1l, 5000, System.currentTimeMillis());
 
+        // when
+        // then
+        assertThrows(IllegalArgumentException.class, () ->
+                userPoint.chargePoint(996000));
+    }
 }

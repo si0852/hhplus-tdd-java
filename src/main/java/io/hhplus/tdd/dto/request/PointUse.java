@@ -12,7 +12,7 @@ public class PointUse {
 
     public void checkAmount() {
         if(this.amount < 0){
-            throw new IllegalArgumentException("포인트를 확인해주세요");
+            throw new IllegalArgumentException("사용 금액은 0보다 커야한다.");
         }
     }
 

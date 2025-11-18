@@ -21,10 +21,6 @@ public class PointService {
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
 
-    public UserPoint checkPoint(long id) {
-        return userCheckValue(id);
-    }
-
     public UserPoint chargePoint(PointCharge point) {
         point.checkAmount();
 
