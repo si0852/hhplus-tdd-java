@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @RequiredArgsConstructor
@@ -21,28 +24,47 @@ public class PointService {
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
 
+
+    private final ConcurrentHashMap<Long, ReentrantLock> userLocks = new ConcurrentHashMap<>();
+
     public UserPoint chargePoint(PointCharge point) {
         point.checkAmount();
 
-        UserPoint user = userCheckValue(point.getId());
-        UserPoint newUserPoint = user.chargePoint(point.getAmount());
+        Lock lock = userLocks.computeIfAbsent(point.getId(), id -> new ReentrantLock(false));
 
-        UserPoint successPoint = userPointRepository.savePoint(newUserPoint);
-        pointHistoryRepository.insertHistory(new PointHistory(0, successPoint.id(), point.getAmount(), TransactionType.CHARGE, System.currentTimeMillis()));
+        lock.lock();
 
-        return successPoint;
+        try {
+            UserPoint user = userCheckValue(point.getId());
+            UserPoint newUserPoint = user.chargePoint(point.getAmount());
+
+            UserPoint successPoint = userPointRepository.savePoint(newUserPoint);
+            pointHistoryRepository.insertHistory(new PointHistory(0, successPoint.id(), point.getAmount(), TransactionType.CHARGE, System.currentTimeMillis()));
+
+            return successPoint;
+        }finally {
+            lock.unlock();
+        }
     }
 
     public UserPoint usePoint(PointUse point) {
         point.checkAmount();
 
-        UserPoint user = userCheckValue(point.getId());
-        UserPoint useUserPoint = user.usePoint(point.getAmount());
+        Lock lock = userLocks.computeIfAbsent(point.getId(), id -> new ReentrantLock(false));
 
-        UserPoint userPoint = userPointRepository.updatePoint(useUserPoint);
-        pointHistoryRepository.insertHistory(new PointHistory(0, userPoint.id(), point.getAmount(), TransactionType.USE, System.currentTimeMillis()));
+        lock.lock();
 
-        return userPoint;
+        try{
+            UserPoint user = userCheckValue(point.getId());
+            UserPoint useUserPoint = user.usePoint(point.getAmount());
+
+            UserPoint userPoint = userPointRepository.updatePoint(useUserPoint);
+            pointHistoryRepository.insertHistory(new PointHistory(0, userPoint.id(), point.getAmount(), TransactionType.USE, System.currentTimeMillis()));
+
+            return userPoint;
+        }finally {
+            lock.unlock();
+        }
     }
 
     public List<PointHistory> selectHistory(long userId) {
